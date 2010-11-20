@@ -35,7 +35,7 @@ FixedPngStack::~FixedPngStack()
 void
 FixedPngStack::Push(Buffer *buf, int x, int y, int w, int h)
 {
-    unsigned char *buf_data = (unsigned char *)buf->data();
+    unsigned char *buf_data = (unsigned char *) Buffer::Data(buf->handle_);
     int start = y*width*4 + x*4;
     for (int i = 0; i < h; i++) {
         unsigned char *datap = &data[start + i*width*4];
@@ -60,7 +60,7 @@ FixedPngStack::PngEncodeSync()
         encoder.encode();
         int png_len = encoder.get_png_len();
         Buffer *retbuf = Buffer::New(png_len);
-        memcpy(retbuf->data(), encoder.get_png(), png_len);
+        memcpy(Buffer::Data(retbuf->handle_), encoder.get_png(), png_len);
         return scope.Close(retbuf->handle_);
     }
     catch (const char *err) {
@@ -213,7 +213,7 @@ FixedPngStack::EIO_PngEncodeAfter(eio_req *req)
     }
     else {
         Buffer *buf = Buffer::New(enc_req->png_len);
-        memcpy(buf->data(), enc_req->png, enc_req->png_len);
+        memcpy(Buffer::Data(buf->handle_), enc_req->png, enc_req->png_len);
         argv[0] = buf->handle_;
         argv[1] = Undefined();
     }

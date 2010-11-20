@@ -28,11 +28,14 @@ Png::PngEncodeSync()
     HandleScope scope;
 
     try {
-        PngEncoder encoder((unsigned char *)data->data(), width, height, buf_type);
+        PngEncoder encoder(
+            (unsigned char *) Buffer::Data(data->handle_),
+            width, height, buf_type
+        );
         encoder.encode();
         int png_len = encoder.get_png_len();
         Buffer *retbuf = Buffer::New(png_len);
-        memcpy(retbuf->data(), encoder.get_png(), png_len);
+        memcpy(Buffer::Data(retbuf->handle_), encoder.get_png(), png_len);
         return scope.Close(retbuf->handle_);
     }
     catch (const char *err) {
@@ -107,7 +110,10 @@ Png::EIO_PngEncode(eio_req *req)
     Png *png = (Png *)enc_req->png_obj;
 
     try {
-        PngEncoder encoder((unsigned char *)png->data->data(), png->width, png->height, png->buf_type);
+        PngEncoder encoder(
+            (unsigned char *) Buffer::Data(png->data->handle_),
+            png->width, png->height, png->buf_type
+        );
         encoder.encode();
         enc_req->png_len = encoder.get_png_len();
         enc_req->png = (char *)malloc(sizeof(*enc_req->png)*enc_req->png_len);
@@ -142,7 +148,7 @@ Png::EIO_PngEncodeAfter(eio_req *req)
     }
     else {
         Buffer *buf = Buffer::New(enc_req->png_len);
-        memcpy(buf->data(), enc_req->png, enc_req->png_len);
+        memcpy(Buffer::Data(buf->handle_), enc_req->png, enc_req->png_len);
         argv[0] = buf->handle_;
         argv[1] = Undefined();
     }

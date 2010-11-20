@@ -74,7 +74,10 @@ Handle<Value>
 DynamicPngStack::Push(Buffer *buf, int x, int y, int w, int h)
 {
     try {
-        Png *png = new Png((unsigned char *)buf->data(), buf->length(), x, y, w, h);
+        Png *png = new Png(
+            (unsigned char *) Buffer::Data(buf->handle_),
+            Buffer::Length(buf->handle_), x, y, w, h
+        );
         png_stack.push_back(png);
         return Undefined();
     }
@@ -111,7 +114,7 @@ DynamicPngStack::PngEncodeSync()
         free(data);
         int png_len = encoder.get_png_len();
         Buffer *retbuf = Buffer::New(png_len);
-        memcpy(retbuf->data(), encoder.get_png(), png_len);
+        memcpy(Buffer::Data(retbuf->handle_), encoder.get_png(), png_len);
         return scope.Close(retbuf->handle_);
     }
     catch (const char *err) {
@@ -286,7 +289,7 @@ DynamicPngStack::EIO_PngEncodeAfter(eio_req *req)
     }
     else {
         Buffer *buf = Buffer::New(enc_req->png_len);
-        memcpy(buf->data(), enc_req->png, enc_req->png_len);
+        memcpy(Buffer::Data(buf->handle_), enc_req->png, enc_req->png_len);
         argv[0] = buf->handle_;
         argv[1] = png->Dimensions();
         argv[2] = Undefined();
